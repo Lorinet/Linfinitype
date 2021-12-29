@@ -46,6 +46,8 @@ function getAllMessages($user, $recipient)
     {
         array_push($messages, new message_obj($row["sender"], $row["recipient"], $row["message"], $row["time_created"], $row["seen"]));
     }
+    $query = "UPDATE messages SET seen = TRUE WHERE (recipient = '".$recipient."' AND sender = '".$user."') OR (sender = '".$recipient."' AND recipient = '".$user."')";
+    mysqli_query($link, $query);
     return $messages;
 }
 
@@ -147,6 +149,10 @@ if($_SERVER['REQUEST_METHOD'] === 'GET')
     if($_GET["action"] == "userexists")
     {
         echo json_encode(userExists($_POST["user"]));
+    }
+    if($_GET["action"] == "contacts")
+    {
+        echo json_encode(getActiveContacts($_GET["username"]));
     }
 }
 

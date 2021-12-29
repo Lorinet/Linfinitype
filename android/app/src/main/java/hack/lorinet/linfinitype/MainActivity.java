@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,6 +32,16 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
         devicelist = findViewById(R.id.devicelist);
+        ((Button)findViewById(R.id.testConnectButton)).setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                Intent i = new Intent(MainActivity.this, Control.class);
+                i.putExtra("testMode", "enabled");
+                startActivity(i);
+            }
+        });
     }
 
     @Override

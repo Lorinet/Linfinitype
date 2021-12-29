@@ -126,6 +126,10 @@ if($contact[0] === '@') $isgrp = TRUE;
                     }
                     rows[rows.length - 1].getElementsByTagName("td")[1].style.borderBottomLeftRadius = "2px";
                     messageIndex = mesg.length;
+                    for(var i = 0; i < mesg.length; i++)
+                    {
+                        if(mesg[i].seen == false) alert(mesg[i].message);
+                    }
                 }
             }
             if(tbody.innerHTML != "" && flagSkipDown)
@@ -139,6 +143,12 @@ if($contact[0] === '@') $isgrp = TRUE;
         }
         loadMessages();
         setInterval(loadMessages, 1000);
+
+        function reply(message)
+        {
+            document.getElementById("replyBox").value = message;
+            send();
+        }
     </script>
 </body>
 </html>

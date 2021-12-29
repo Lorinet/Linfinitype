@@ -6,8 +6,8 @@
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:layout_width="412dp"
-        android:layout_height="733dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -21,7 +21,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/inputTextView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="74dp"
                 android:hint="00000" />
 
             <Button
@@ -29,6 +29,11 @@
                 android:layout_width="123dp"
                 android:layout_height="65dp"
                 android:text="Input" />
+
+            <WebView
+                android:id="@+id/chatView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 

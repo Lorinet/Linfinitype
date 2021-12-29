@@ -5,6 +5,7 @@ import static androidx.core.content.ContextCompat.startActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 
 public class GestureInterface
 {
@@ -138,6 +139,7 @@ public class GestureInterface
 
     public static void input(String gesture)
     {
+        Log.i("Gesture", gesture);
         byte g = 0;
         g ^= (gesture.charAt(0) == '1' ? 1 << 0 : 0);
         g ^= (gesture.charAt(1) == '1' ? 1 << 1 : 0);

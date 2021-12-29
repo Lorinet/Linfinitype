@@ -57,5 +57,11 @@ $contacts = getActiveContacts($_SESSION["username"]);
             }
         ?>
     </div>
+    <script>
+        function getActiveContacts()
+        {
+            return '<?php json_encode($contacts); ?>';
+        }
+    </script>
 </body>
 </html>

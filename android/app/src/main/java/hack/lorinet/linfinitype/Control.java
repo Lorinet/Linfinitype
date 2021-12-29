@@ -4,16 +4,28 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.webkit.CookieManager;
+import android.webkit.JsResult;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -56,36 +68,120 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getSupportActionBar().hide();
         setContentView(R.layout.activity_control);
         textToSpeech = new TextToSpeech(this, this);
         GestureInterface.appContext = this;
         Intent intent = getIntent();
-        macAddress = intent.getStringExtra("address");
-        try
+        if(intent.getStringExtra("testMode").equals("enabled"))
         {
-            if (bluetoothSocket == null || !connected)
+            Log.i("Linfinitype", "Input test mode");
+        }
+        else
+        {
+            Log.i("Linfinitype", "Connecting to Linfinity device");
+            macAddress = intent.getStringExtra("address");
+            try
             {
-                bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
-                BluetoothDevice hc = bluetoothAdap.getRemoteDevice(macAddress);
-                bluetoothSocket = hc.createInsecureRfcommSocketToServiceRecord(deviceUUID);
-                bluetoothAdap.cancelDiscovery();
-                bluetoothSocket.connect();
-                connectedThread = new ConnectedThread(bluetoothSocket);
-                connectedThread.start();
+                if (bluetoothSocket == null || !connected)
+                {
+                    bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
+                    BluetoothDevice hc = bluetoothAdap.getRemoteDevice(macAddress);
+                    bluetoothSocket = hc.createInsecureRfcommSocketToServiceRecord(deviceUUID);
+                    bluetoothAdap.cancelDiscovery();
+                    bluetoothSocket.connect();
+                    connectedThread = new ConnectedThread(bluetoothSocket);
+                    connectedThread.start();
+                }
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
             }
         }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-
         ((Button)findViewById(R.id.testButton)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
                 GestureInterface.input(((TextInputEditText)findViewById(R.id.inputTextView)).getText().toString());
+                GestureInterface.input(((TextInputEditText)findViewById(R.id.inputTextView)).getText().toString());
+                ((TextInputEditText)findViewById(R.id.inputTextView)).setText("");
             }
         });
+
+        WebView webview = (WebView)findViewById(R.id.chatView);
+        webview.getSettings().setJavaScriptEnabled(true);
+        webview.getSettings().setAllowContentAccess(true);
+        webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+        webview.getSettings().setAllowFileAccess(true);
+        webview.getSettings().setAllowFileAccessFromFileURLs(true);
+        webview.getSettings().setAllowUniversalAccessFromFileURLs(true);
+        webview.getSettings().setDatabaseEnabled(true);
+        webview.getSettings().setLoadsImagesAutomatically(true);
+        webview.getSettings().setDomStorageEnabled(true);
+        CookieManager.getInstance().setAcceptCookie(true);
+        webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+        webview.setWebViewClient(new WebViewClient() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if(url.endsWith("home.php"))
+                {
+                    view.evaluateJavascript("javascript:localStorage.getItem('username')", new ValueCallback<String>() {
+                        @Override public void onReceiveValue(String s) {
+                            SharedPreferences userPref = getSharedPreferences("username", 0);
+                            SharedPreferences.Editor userPrefEdit = userPref.edit();
+                            userPrefEdit.putString("username", s.replace("\"", "")).commit();
+                        }
+                    });
+
+                }
+                view.loadUrl(url);
+                return true;
+            }
+
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Log.e("WebBrowser", "ERROR: " + String.valueOf(errorCode) + " (" + description + ")");
+                String htmlData = "<html><body><div style=\"margin-top: 100px; text-align: center;\"><h1>Nincs internetkapcsolat!</h1><br><button style=\"border-radius: 15px; color: black; border: 0px; background-color: #ddd; padding: 20px; font-size: 16px;\" onClick=\"window.history.go(-1);\">Újratöltés</button></div></body></html>";
+                webview.loadUrl("about:blank");
+                webview.loadDataWithBaseURL(null,htmlData, "text/html", "UTF-8",null);
+                webview.invalidate();
+            }
+        });
+        webview.setWebChromeClient(new WebChromeClient() {
+            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                new AlertDialog.Builder(Control.this)
+                        .setTitle("Alert")
+                        .setMessage(message)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                return true;
+            }
+        });
+        webview.setHorizontalScrollBarEnabled(false);
+        webview.setOnTouchListener(new View.OnTouchListener() {
+            float m_downX;
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getPointerCount() > 1) {
+                    return true;
+                }
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: {
+                        m_downX = event.getX();
+                        break;
+                    }
+                    case MotionEvent.ACTION_MOVE:
+                    case MotionEvent.ACTION_CANCEL:
+                    case MotionEvent.ACTION_UP: {
+                        event.setLocation(m_downX, event.getY());
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+        webview.loadUrl("http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081");
     }
 
     @Override
@@ -102,7 +198,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         }
         else
         {
-            Log.e("TTS", "Init failed.");
+            Log.e("TTS", "Init failed (" + String.valueOf(status) + ")");
         }
     }
 
@@ -142,14 +238,14 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
 
         public void run()
         {
-            inputBuffer = new byte[1024];
+            inputBuffer = new byte[16];
             int numBytes;
 
             while (true)
             {
                 try
                 {
-                    if (inputStream.available() >= 5)
+                    if (inputStream.available() >= 6)
                     {
                         numBytes = inputStream.read(inputBuffer);
                         byte[] mesgBytes = new byte[inputBuffer.length];
