@@ -46,7 +46,7 @@ function getAllMessages($user, $recipient)
     {
         array_push($messages, new message_obj($row["sender"], $row["recipient"], $row["message"], $row["time_created"], $row["seen"]));
     }
-    $query = "UPDATE messages SET seen = TRUE WHERE (recipient = '".$recipient."' AND sender = '".$user."') OR (sender = '".$recipient."' AND recipient = '".$user."')";
+    $query = "UPDATE messages SET seen = TRUE WHERE (sender = '".$recipient."' AND recipient = '".$user."')";
     mysqli_query($link, $query);
     return $messages;
 }

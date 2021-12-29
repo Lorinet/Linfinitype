@@ -128,7 +128,7 @@ if($contact[0] === '@') $isgrp = TRUE;
                     messageIndex = mesg.length;
                     for(var i = 0; i < mesg.length; i++)
                     {
-                        if(mesg[i].seen == false) alert(mesg[i].message);
+                        if(mesg[i].seen == false && mesg[i].sender != username) alert(mesg[i].message);
                     }
                 }
             }
