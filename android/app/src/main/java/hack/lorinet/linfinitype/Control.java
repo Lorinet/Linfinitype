@@ -31,8 +31,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -73,6 +79,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         setContentView(R.layout.activity_control);
         textToSpeech = new TextToSpeech(this, this);
         GestureInterface.appContext = this;
+        GestureInterface.webView = (WebView)findViewById(R.id.chatView);
         Intent intent = getIntent();
         if(intent.getStringExtra("testMode").equals("enabled"))
         {
@@ -126,7 +133,13 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                if(url.endsWith("home.php"))
+                view.loadUrl(url);
+                return true;
+            }
+            @Override
+            public void onPageFinished(WebView view, String url)
+            {
+                if(url.endsWith("chats.php"))
                 {
                     view.evaluateJavascript("javascript:localStorage.getItem('username')", new ValueCallback<String>() {
                         @Override public void onReceiveValue(String s) {
@@ -135,12 +148,39 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                             userPrefEdit.putString("username", s.replace("\"", "")).commit();
                         }
                     });
+                    view.evaluateJavascript("javascript:getActiveContacts()", new ValueCallback<String>() {
+                        @Override public void onReceiveValue(String s) {
+                            try
+                            {
+                                Log.i("Chat", s);
+                                JSONArray ja = new JSONArray(s);
+                                String[] conts = new String[ja.length()];
+                                for(int i = 0; i < ja.length(); i++)
+                                {
+                                    conts[i] = ja.getString(i);
+                                    Log.i("ChatContacts", conts[i]);
+                                }
+                                GestureInterface.menus[1] = new GestureInterface.GestureMenu("Chats", conts, new GestureInterface.GestureMenu.handler()
+                                {
+                                    @Override
+                                    public void menuAction(String letter, String option)
+                                    {
+                                        GestureInterface.speakInterrupt(option);
+                                    }
+                                });
+                                GestureInterface.currentMenu = 1;
+                                GestureInterface.showMenu();
+                            }
+                            catch (JSONException e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    });
 
                 }
-                view.loadUrl(url);
-                return true;
             }
-
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 Log.e("WebBrowser", "ERROR: " + String.valueOf(errorCode) + " (" + description + ")");
                 String htmlData = "<html><body><div style=\"margin-top: 100px; text-align: center;\"><h1>Nincs internetkapcsolat!</h1><br><button style=\"border-radius: 15px; color: black; border: 0px; background-color: #ddd; padding: 20px; font-size: 16px;\" onClick=\"window.history.go(-1);\">Újratöltés</button></div></body></html>";
@@ -151,11 +191,8 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         });
         webview.setWebChromeClient(new WebChromeClient() {
             public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
-                new AlertDialog.Builder(Control.this)
-                        .setTitle("Alert")
-                        .setMessage(message)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
+                GestureInterface.speak(message);
+                result.cancel();
                 return true;
             }
         });
@@ -181,7 +218,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                 return false;
             }
         });
-        webview.loadUrl("http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081");
+        webview.loadUrl("about:blank");
     }
 
     @Override

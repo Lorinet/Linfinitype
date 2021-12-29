@@ -4,13 +4,17 @@ import static androidx.core.content.ContextCompat.startActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.webkit.ValueCallback;
+import android.webkit.WebView;
 
 public class GestureInterface
 {
     public static Context appContext;
     public static TextToSpeech textToSpeech;
+    public static WebView webView;
 
     public static int doubleCheckGesture = 256;
     public static int previousGesture = 256;
@@ -58,7 +62,7 @@ public class GestureInterface
     {
         public interface handler
         {
-            void menuAction(String option);
+            void menuAction(String letter, String option);
         }
 
         public String title;
@@ -83,7 +87,8 @@ public class GestureInterface
 
         public void activateOption(String opt)
         {
-            handler.menuAction(opt);
+            int index = characterToNumber(opt);
+            handler.menuAction(opt, options[index]);
         }
     }
 
@@ -93,26 +98,34 @@ public class GestureInterface
                     new GestureMenu("Main menu", new String[]{"Chat", "Phone", "Assistant", "Notes", "Calculator", "Music"}, new GestureMenu.handler()
                     {
                         @Override
-                        public void menuAction(String option)
+                        public void menuAction(String letter, String option)
                         {
                             switch (option)
                             {
-                                case "A":
-                                    speakInterrupt("You selected Chat.");
+                                case "Chat":
+                                    webView.loadUrl("http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081");
                                     break;
-                                case "B":
+                                case "Phone":
                                     speakInterrupt("You selected Phone.");
                                     break;
-                                case "C":
+                                case "Assistant":
                                     startActivity(appContext, new Intent(Intent.ACTION_VOICE_COMMAND).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK), null);
+                                    break;
                             }
                         }
-                    })
+                    }),
+                    null
             };
 
     public static String numberToCharacter(int i)
     {
         return i + 1 > 0 && i + 1 < 27 ? String.valueOf((char) (i + 65)) : null;
+    }
+
+    public static int characterToNumber(String c)
+    {
+        Log.i("CharToNum", String.valueOf((int)(c.charAt(0) - 65)));
+        return c.charAt(0) - 65;
     }
 
     public static void speak(String text)

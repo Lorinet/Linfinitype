@@ -60,7 +60,7 @@ $contacts = getActiveContacts($_SESSION["username"]);
     <script>
         function getActiveContacts()
         {
-            return '<?php json_encode($contacts); ?>';
+            return '<?php echo json_encode($contacts); ?>';
         }
     </script>
 </body>
