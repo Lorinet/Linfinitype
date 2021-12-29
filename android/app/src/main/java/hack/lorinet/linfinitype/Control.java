@@ -152,13 +152,11 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                         @Override public void onReceiveValue(String s) {
                             try
                             {
-                                Log.i("Chat", s);
-                                JSONArray ja = new JSONArray(s);
+                                JSONArray ja = new JSONArray(s.substring(1, s.length() - 1).replace("\\", ""));
                                 String[] conts = new String[ja.length()];
                                 for(int i = 0; i < ja.length(); i++)
                                 {
                                     conts[i] = ja.getString(i);
-                                    Log.i("ChatContacts", conts[i]);
                                 }
                                 GestureInterface.menus[1] = new GestureInterface.GestureMenu("Chats", conts, new GestureInterface.GestureMenu.handler()
                                 {
