@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity
 
             Intent i = new Intent(MainActivity.this, Control.class);
             i.putExtra("address", address);
+            i.putExtra("testMode", "disabled");
             startActivity(i);
         }
     };

@@ -163,7 +163,10 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                                     @Override
                                     public void menuAction(String letter, String option)
                                     {
+                                        Log.i("Chat", "Chat selected: " + option);
                                         GestureInterface.speakInterrupt(option);
+                                        GestureInterface.chatCurrentUser = option;
+                                        view.loadUrl(GestureInterface.chatUrl + "/conversation.php?user=" + option);
                                     }
                                 });
                                 GestureInterface.currentMenu = 1;
@@ -177,6 +180,10 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                         }
                     });
 
+                }
+                else if(url.contains("conversation.php"))
+                {
+                    GestureInterface.enterInputMode();
                 }
             }
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {

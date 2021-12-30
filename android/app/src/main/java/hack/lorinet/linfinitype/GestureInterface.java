@@ -22,6 +22,10 @@ public class GestureInterface
     public static boolean activated = false;
     public static boolean textInput = false;
 
+    public static final String chatUrl = "http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081";
+
+    public static String chatCurrentUser = "";
+
     public static String[] gestureTable =
             {
                     "Start",
@@ -55,7 +59,7 @@ public class GestureInterface
                     "W",
                     "X",
                     "Y",
-                    "Z"
+                    "Idle"
             };
 
     public static class GestureMenu
@@ -88,7 +92,8 @@ public class GestureInterface
         public void activateOption(String opt)
         {
             int index = characterToNumber(opt);
-            handler.menuAction(opt, options[index]);
+            if(index >= 0 && index < options.length)
+                handler.menuAction(opt, options[index]);
         }
     }
 
@@ -103,7 +108,7 @@ public class GestureInterface
                             switch (option)
                             {
                                 case "Chat":
-                                    webView.loadUrl("http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081");
+                                    webView.loadUrl(chatUrl);
                                     break;
                                 case "Phone":
                                     speakInterrupt("You selected Phone.");
@@ -153,6 +158,7 @@ public class GestureInterface
     public static void input(String gesture)
     {
         Log.i("Gesture", gesture);
+        Log.i("CurrentMenu", String.valueOf(currentMenu));
         byte g = 0;
         g ^= (gesture.charAt(0) == '1' ? 1 << 0 : 0);
         g ^= (gesture.charAt(1) == '1' ? 1 << 1 : 0);
@@ -168,7 +174,7 @@ public class GestureInterface
         else if(previousGesture != doubleCheckGesture)
         {
             previousGesture = ge;
-
+            if(ge == 31) return;
             String gest = gestureTable[ge];
             if (!activated && gest == "Start")
             {
@@ -198,7 +204,18 @@ public class GestureInterface
                                 break;
                             case "Ok":
                                 speakInterrupt(currentInput);
-                                //TODO: confirm text and send/save it?
+                                if(currentMenu == 1)
+                                {
+                                    webView.evaluateJavascript("javascript:reply('" + currentInput + "')", new ValueCallback<String>()
+                                    {
+                                        @Override
+                                        public void onReceiveValue(String value)
+                                        {
+
+                                        }
+                                    });
+                                }
+                                currentInput = "";
                                 break;
                         }
                     }
@@ -225,6 +242,12 @@ public class GestureInterface
                 }
             }
         }
+    }
+
+    public static void enterInputMode()
+    {
+        textInput = true;
+        speakInterrupt("Text mode");
     }
 
     public static void back()
