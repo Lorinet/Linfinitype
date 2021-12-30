@@ -122,6 +122,14 @@ public class GestureInterface
                     null
             };
 
+    public static void activateMenu(int index)
+    {
+        textInput = false;
+        currentInput = "";
+        currentMenu = index;
+        showMenu();
+    }
+
     public static String numberToCharacter(int i)
     {
         return i + 1 > 0 && i + 1 < 27 ? String.valueOf((char) (i + 65)) : null;
@@ -231,8 +239,7 @@ public class GestureInterface
                                 activated = false;
                                 break;
                             case "Exit":
-                                currentMenu = 0;
-                                showMenu();
+                                activateMenu(0);
                                 break;
                             case "?":
                                 showMenu();

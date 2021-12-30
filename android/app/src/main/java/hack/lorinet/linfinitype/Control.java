@@ -169,8 +169,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                                         view.loadUrl(GestureInterface.chatUrl + "/conversation.php?user=" + option);
                                     }
                                 });
-                                GestureInterface.currentMenu = 1;
-                                GestureInterface.showMenu();
+                                GestureInterface.activateMenu(1);
                             }
                             catch (JSONException e)
                             {
