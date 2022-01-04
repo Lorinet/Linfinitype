@@ -2,13 +2,20 @@ package hack.lorinet.linfinitype;
 
 import static androidx.core.content.ContextCompat.startActivity;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.ContactsContract;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class GestureInterface
 {
@@ -25,6 +32,9 @@ public class GestureInterface
     public static final String chatUrl = "http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081";
 
     public static String chatCurrentUser = "";
+    public static String currentPhoneNumber = "";
+
+    public static Map<String, String> favoriteContacts;
 
     public static String[] gestureTable =
             {
@@ -62,6 +72,11 @@ public class GestureInterface
                     "Idle"
             };
 
+    public interface TextInputHandler
+    {
+        void input(String text);
+    }
+
     public static class GestureMenu
     {
         public interface handler
@@ -92,10 +107,48 @@ public class GestureInterface
         public void activateOption(String opt)
         {
             int index = characterToNumber(opt);
-            if(index >= 0 && index < options.length)
+            if (index >= 0 && index < options.length)
+            {
                 handler.menuAction(opt, options[index]);
+            }
         }
     }
+
+    public static int currentInputHandler = 0;
+    public static TextInputHandler[] inputHandlers =
+            {
+                    new TextInputHandler()
+                    {
+                        @Override
+                        public void input(String text)
+                        {
+                            speakInterrupt(currentInput);
+                            webView.evaluateJavascript("javascript:reply('" + text + "')", new ValueCallback<String>()
+                            {
+                                @Override
+                                public void onReceiveValue(String value)
+                                {
+
+                                }
+                            });
+                        }
+                    },
+                    new TextInputHandler()
+                    {
+                        @Override
+                        public void input(String text)
+                        {
+                            String number = "";
+                            for(int i = 0; i < text.length(); i++)
+                            {
+                                number += characterToNumber(String.valueOf(text.charAt(i)));
+                            }
+                            speakInterrupt(number);
+                            textInput = false;
+                            activateMenu(4);
+                        }
+                    }
+            };
 
     public static int currentMenu = 0;
     public static GestureMenu[] menus =
@@ -119,8 +172,57 @@ public class GestureInterface
                             }
                         }
                     }),
-                    null
+                    null,
+                    new GestureMenu("Phone", new String[]{"Dialer", "Contacts"}, new GestureMenu.handler()
+                    {
+                        @Override
+                        public void menuAction(String letter, String option)
+                        {
+                            switch(option)
+                            {
+                                case "Dialer":
+                                    speakInterrupt("Use letters A to K for digits 0 to 9.");
+                                    currentInputHandler = 1;
+                                    textInput = true;
+                                    break;
+                                case "Contacts":
+                                    activateMenu(3);
+                                    break;
+                            }
+                        }
+                    }),
+                    new GestureMenu("You will have to grant Contacts permission.", new String[]{}, new GestureMenu.handler()
+                    {
+                        @Override
+                        public void menuAction(String letter, String option)
+                        {
+                            GestureInterface.activateMenu(2);
+                        }
+                    }),
+                    new GestureMenu("", new String[]{"Call", "Cancel"}, new GestureMenu.handler()
+                    {
+                        @Override
+                        public void menuAction(String letter, String option)
+                        {
+                            switch(option)
+                            {
+                                case "Call":
+                                    call(currentPhoneNumber);
+                                    break;
+                                case "Cancel":
+                                    currentPhoneNumber = "";
+                                    break;
+                            }
+                        }
+                    })
             };
+
+    public static void call(String number)
+    {
+        Intent callIntent = new Intent(Intent.ACTION_CALL);
+        callIntent.setData(Uri.parse("tel:" + number));//change the number
+        appContext.startActivity(callIntent);
+    }
 
     public static void activateMenu(int index)
     {
@@ -137,20 +239,24 @@ public class GestureInterface
 
     public static int characterToNumber(String c)
     {
-        Log.i("CharToNum", String.valueOf((int)(c.charAt(0) - 65)));
+        Log.i("CharToNum", String.valueOf((int) (c.charAt(0) - 65)));
         return c.charAt(0) - 65;
     }
 
     public static void speak(String text)
     {
-        if(textToSpeech != null)
+        if (textToSpeech != null)
+        {
             textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null, "");
+        }
     }
 
     public static void speakInterrupt(String text)
     {
-        if(textToSpeech != null)
+        if (textToSpeech != null)
+        {
             textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, "");
+        }
     }
 
     public static void showMenu()
@@ -174,15 +280,15 @@ public class GestureInterface
         g ^= (gesture.charAt(3) == '1' ? 1 << 3 : 0);
         g ^= (gesture.charAt(4) == '1' ? 1 << 4 : 0);
         int ge = g & 0xFF;
-        if(ge != doubleCheckGesture)
+        if (ge != doubleCheckGesture)
         {
             previousGesture = doubleCheckGesture;
             doubleCheckGesture = ge;
         }
-        else if(previousGesture != doubleCheckGesture)
+        else if (previousGesture != doubleCheckGesture)
         {
             previousGesture = ge;
-            if(ge == 31) return;
+            if (ge == 31) return;
             String gest = gestureTable[ge];
             if (!activated && gest == "Start")
             {
@@ -211,18 +317,7 @@ public class GestureInterface
                                 speakInterrupt(currentInput);
                                 break;
                             case "Ok":
-                                speakInterrupt(currentInput);
-                                if(currentMenu == 1)
-                                {
-                                    webView.evaluateJavascript("javascript:reply('" + currentInput + "')", new ValueCallback<String>()
-                                    {
-                                        @Override
-                                        public void onReceiveValue(String value)
-                                        {
-
-                                        }
-                                    });
-                                }
+                                inputHandlers[currentInputHandler].input(currentInput);
                                 currentInput = "";
                                 break;
                         }
@@ -230,7 +325,10 @@ public class GestureInterface
                 }
                 else
                 {
-                    if (ge > 5) selectMenuItem(gest);
+                    if (ge > 5)
+                    {
+                        selectMenuItem(gest);
+                    }
                     else
                     {
                         switch (gest)

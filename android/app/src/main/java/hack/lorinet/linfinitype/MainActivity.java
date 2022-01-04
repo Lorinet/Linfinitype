@@ -2,7 +2,9 @@ package hack.lorinet.linfinitype;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
         devicelist = findViewById(R.id.devicelist);
-        ((Button)findViewById(R.id.testConnectButton)).setOnClickListener(new View.OnClickListener()
+        ((Button) findViewById(R.id.testConnectButton)).setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view)
