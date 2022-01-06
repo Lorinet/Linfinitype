@@ -214,6 +214,14 @@ public class GestureInterface
                                     break;
                             }
                         }
+                    }),
+                    new GestureMenu("Notes", new String[]{"New note"}, new GestureMenu.handler()
+                    {
+                        @Override
+                        public void menuAction(String letter, String option)
+                        {
+
+                        }
                     })
             };
 

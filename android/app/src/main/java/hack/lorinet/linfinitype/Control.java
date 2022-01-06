@@ -258,6 +258,8 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         });
         webview.loadUrl("about:blank");
         requestContactPermission();
+        SharedPreferences spref = getSharedPreferences("notes", 0);
+
     }
 
     @Override
@@ -419,7 +421,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         }
     }
 
-    private Map getFavoriteContacts()
+    private void getFavoriteContacts()
     {
 
         Map<String, String> contactMap = new HashMap<String, String>();
@@ -472,6 +474,5 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                 GestureInterface.activateMenu(4);
             }
         });
-        return contactMap;
     }
 }
