@@ -1,14 +1,14 @@
 package hack.lorinet.linfinitype;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -24,12 +24,10 @@ import android.view.View;
 import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.JsResult;
-import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -39,30 +37,27 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class Control extends AppCompatActivity implements TextToSpeech.OnInitListener
+public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnInitListener
 {
-    BluetoothAdapter bluetoothAdap = null;
-    BluetoothSocket bluetoothSocket = null;
-    Boolean connected = false;
+    static final int REQUEST_CODE_CONTACTS_PERMISSION = 0;
+
+    // UUID for HC-05 module
     static final UUID deviceUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    String macAddress = null;
-    private ConnectedThread connectedThread;
+
     private TextToSpeech textToSpeech;
+    private BluetoothAdapter bluetoothAdap = null;
+    private BluetoothSocket bluetoothSocket = null;
+    private ConnectedThread connectedThread;
+    private Boolean connected = false;
+    private String macAddress = null;
 
     private final Handler handler = new Handler()
     {
@@ -76,7 +71,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     //Toast.makeText(getApplicationContext(), readMessage, Toast.LENGTH_SHORT);
-                    GestureInterface.input(readMessage);
+                    GestureUI.input(readMessage);
                     break;
             }
         }
@@ -88,10 +83,10 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getSupportActionBar().hide();
-        setContentView(R.layout.activity_control);
+        setContentView(R.layout.activity_interface);
         textToSpeech = new TextToSpeech(this, this);
-        GestureInterface.appContext = this;
-        GestureInterface.webView = (WebView) findViewById(R.id.chatView);
+        GestureUI.appContext = this;
+        GestureUI.webView = (WebView) findViewById(R.id.appWebView);
         Intent intent = getIntent();
         if (intent.getStringExtra("testMode").equals("enabled"))
         {
@@ -124,13 +119,14 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
             @Override
             public void onClick(View v)
             {
-                GestureInterface.input(((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString());
-                GestureInterface.input(((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString());
+                GestureUI.input(((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString());
+                GestureUI.input(((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString());
+                GestureUI.input("11111");
                 ((TextInputEditText) findViewById(R.id.inputTextView)).setText("");
             }
         });
 
-        WebView webview = (WebView) findViewById(R.id.chatView);
+        WebView webview = (WebView) findViewById(R.id.appWebView);
         webview.getSettings().setJavaScriptEnabled(true);
         webview.getSettings().setAllowContentAccess(true);
         webview.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
@@ -155,57 +151,12 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
             @Override
             public void onPageFinished(WebView view, String url)
             {
-                if (url.endsWith("chats.php"))
+                for (int i = 0; i < GestureUI.webViewEventHandlers.size(); i++)
                 {
-                    view.evaluateJavascript("javascript:localStorage.getItem('username')", new ValueCallback<String>()
+                    if (url.contains(GestureUI.webViewEventHandlers.get(i).url))
                     {
-                        @Override
-                        public void onReceiveValue(String s)
-                        {
-                            SharedPreferences userPref = getSharedPreferences("username", 0);
-                            SharedPreferences.Editor userPrefEdit = userPref.edit();
-                            userPrefEdit.putString("username", s.replace("\"", "")).commit();
-                        }
-                    });
-                    view.evaluateJavascript("javascript:getActiveContacts()", new ValueCallback<String>()
-                    {
-                        @Override
-                        public void onReceiveValue(String s)
-                        {
-                            try
-                            {
-                                JSONArray ja = new JSONArray(s.substring(1, s.length() - 1).replace("\\", ""));
-                                String[] conts = new String[ja.length()];
-                                for (int i = 0; i < ja.length(); i++)
-                                {
-                                    conts[i] = ja.getString(i);
-                                }
-                                GestureInterface.menus[1] = new GestureInterface.GestureMenu("Chats", conts, new GestureInterface.GestureMenu.handler()
-                                {
-                                    @Override
-                                    public void menuAction(String letter, String option)
-                                    {
-                                        Log.i("Chat", "Chat selected: " + option);
-                                        GestureInterface.speakInterrupt(option);
-                                        GestureInterface.chatCurrentUser = option;
-                                        view.loadUrl(GestureInterface.chatUrl + "/conversation.php?user=" + option);
-                                    }
-                                });
-                                GestureInterface.activateMenu(1);
-                            }
-                            catch (JSONException e)
-                            {
-                                e.printStackTrace();
-                            }
-
-                        }
-                    });
-
-                }
-                else if (url.contains("conversation.php"))
-                {
-                    GestureInterface.currentInputHandler = 0;
-                    GestureInterface.enterInputMode();
+                        GestureUI.webViewEventHandlers.get(i).onPageFinished(view);
+                    }
                 }
             }
 
@@ -222,7 +173,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         {
             public boolean onJsAlert(WebView view, String url, String message, JsResult result)
             {
-                GestureInterface.speak(message);
+                GestureUI.speak(message);
                 result.cancel();
                 return true;
             }
@@ -258,8 +209,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         });
         webview.loadUrl("about:blank");
         requestContactPermission();
-        SharedPreferences spref = getSharedPreferences("notes", 0);
-
+        GestureUI.start();
     }
 
     @Override
@@ -272,7 +222,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
             {
                 Log.e("TTS", "Init failed. English language not supported.");
             }
-            GestureInterface.textToSpeech = textToSpeech;
+            GestureUI.textToSpeech = textToSpeech;
         }
         else
         {
@@ -334,7 +284,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                 }
                 catch (IOException e)
                 {
-                    Log.d("LinfinitypeDevice", "Input stream was disconnected", e);
+                    Log.e("LinfinitypeDevice", "Input stream was disconnected", e);
                     break;
                 }
             }
@@ -359,8 +309,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
         {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED)
             {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        android.Manifest.permission.READ_CONTACTS))
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.READ_CONTACTS))
                 {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("Read Contacts permission");
@@ -372,10 +321,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                         @Override
                         public void onDismiss(DialogInterface dialog)
                         {
-                            requestPermissions(
-                                    new String[]
-                                            {android.Manifest.permission.READ_CONTACTS}
-                                    , 0);
+                            requestPermissions(new String[]{android.Manifest.permission.READ_CONTACTS}, REQUEST_CODE_CONTACTS_PERMISSION);
                         }
                     });
                     builder.show();
@@ -384,7 +330,7 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
                 {
                     ActivityCompat.requestPermissions(this,
                             new String[]{android.Manifest.permission.READ_CONTACTS},
-                            0);
+                            REQUEST_CODE_CONTACTS_PERMISSION);
                 }
             }
             else
@@ -399,80 +345,60 @@ public class Control extends AppCompatActivity implements TextToSpeech.OnInitLis
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults)
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode)
+        if (requestCode == REQUEST_CODE_CONTACTS_PERMISSION)
         {
-            case 0:
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                {
-                    getFavoriteContacts();
-                }
-                else
-                {
-                    Toast.makeText(this, "You have denied the contacts permission", Toast.LENGTH_LONG).show();
-                }
-                return;
+                getFavoriteContacts();
             }
+            else
+            {
+                Toast.makeText(this, "You have denied the contacts permission", Toast.LENGTH_LONG).show();
+            }
+            return;
         }
     }
 
+    @SuppressLint("Range")
     private void getFavoriteContacts()
     {
-
-        Map<String, String> contactMap = new HashMap<String, String>();
-
-        Uri queryUri = ContactsContract.Contacts.CONTENT_URI;
-
-        String[] projection = new String[]{
-                ContactsContract.Contacts._ID,
-                ContactsContract.Contacts.DISPLAY_NAME,
-                ContactsContract.Contacts.STARRED};
-
-        String selection = ContactsContract.Contacts.STARRED + "='1'";
-
-        Cursor cursor = this.getContentResolver().query(queryUri, projection, selection, null, null);
-
-        while (cursor.moveToNext())
+        HashMap<String, String> contactMap = new HashMap<>();
+        ContentResolver cr = getContentResolver();
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,null, null, null, null);
+        if ((cur != null ? cur.getCount() : 0) > 0)
         {
-            @SuppressLint("Range") String contactID = cursor.getString(cursor
-                    .getColumnIndex(ContactsContract.Contacts._ID));
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            Uri uri = Uri.withAppendedPath(
-                    ContactsContract.Contacts.CONTENT_URI, String.valueOf(contactID));
-            intent.setData(uri);
-            String intentUriString = intent.toUri(0);
-
-            @SuppressLint("Range") String title = (cursor.getString(
-                    cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)));
-
-            contactMap.put(title, intentUriString);
-            Log.i("Loaded contact", title + " " + intentUriString);
-        }
-
-        cursor.close();
-
-        GestureInterface.favoriteContacts = contactMap;
-        ArrayList<String> al = new ArrayList<String>();
-        for(String en : contactMap.keySet())
-        {
-            al.add(contactMap.get(en));
-        }
-        String[] acont = new String[al.size()];
-        al.toArray(acont);
-        GestureInterface.menus[3] = new GestureInterface.GestureMenu("Contacts", acont, new GestureInterface.GestureMenu.handler()
-        {
-            @Override
-            public void menuAction(String letter, String option)
+            while (cur != null && cur.moveToNext())
             {
-                GestureInterface.currentPhoneNumber = GestureInterface.favoriteContacts.get(option);
-                GestureInterface.activateMenu(4);
+                @SuppressLint("Range") String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                @SuppressLint("Range") String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                @SuppressLint("Range") String fav = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.STARRED));
+                if(fav.equals("1"))
+                {
+                    if (cur.getInt(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0)
+                    {
+                        Cursor pCur = cr.query(
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                null,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                new String[]{id}, null);
+                        while (pCur.moveToNext())
+                        {
+                            String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                            contactMap.put(name, phoneNo);
+                            Log.i("Loaded contact", name + ": " + phoneNo + " " + fav);
+                        }
+                        pCur.close();
+                    }
+                }
             }
-        });
+        }
+        if (cur != null)
+        {
+            cur.close();
+        }
+        GestureUI.favoriteContacts = contactMap;
     }
 }

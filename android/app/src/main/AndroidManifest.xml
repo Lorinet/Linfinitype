@@ -29,7 +29,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Control"
+            android:name=".InterfaceView"
             android:exported="true">
         </activity>
     </application>

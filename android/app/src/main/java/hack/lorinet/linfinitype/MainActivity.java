@@ -2,9 +2,7 @@ package hack.lorinet.linfinitype;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -39,7 +37,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                Intent i = new Intent(MainActivity.this, Control.class);
+                Intent i = new Intent(MainActivity.this, InterfaceView.class);
                 i.putExtra("testMode", "enabled");
                 startActivity(i);
             }
@@ -101,7 +99,7 @@ public class MainActivity extends AppCompatActivity
             String info = ((TextView) v).getText().toString();
             String address = info.substring(info.length() - 17);
 
-            Intent i = new Intent(MainActivity.this, Control.class);
+            Intent i = new Intent(MainActivity.this, InterfaceView.class);
             i.putExtra("address", address);
             i.putExtra("testMode", "disabled");
             startActivity(i);
