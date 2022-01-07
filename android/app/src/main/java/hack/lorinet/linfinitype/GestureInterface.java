@@ -2,20 +2,17 @@ package hack.lorinet.linfinitype;
 
 import static androidx.core.content.ContextCompat.startActivity;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
-import android.provider.ContactsContract;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class GestureInterface
 {
@@ -35,6 +32,8 @@ public class GestureInterface
     public static String currentPhoneNumber = "";
 
     public static Map<String, String> favoriteContacts;
+
+    public static Map<String, String> notes;
 
     public static String[] gestureTable =
             {
@@ -372,5 +371,12 @@ public class GestureInterface
     public static void help()
     {
         speakInterrupt("To read the menu, clench all of your fingers. To activate an option, apply the gesture corresponding to the option's letter. To return to the main menu, apply the Back gesture.");
+    }
+
+    public static void loadNotes()
+    {
+        SharedPreferences notpref = appContext.getSharedPreferences("notes", 0);
+        Set<String> lnots = notpref.getAll().keySet();
+        menus[5].options =
     }
 }
