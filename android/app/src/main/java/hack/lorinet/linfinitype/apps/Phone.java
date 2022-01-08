@@ -2,11 +2,20 @@ package hack.lorinet.linfinitype.apps;
 
 import static hack.lorinet.linfinitype.GestureUI.HANDLE_NULL;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
+
+
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+
 import java.util.ArrayList;
+import java.util.Locale;
 
 import hack.lorinet.linfinitype.Application;
 import hack.lorinet.linfinitype.GestureUI;
@@ -50,6 +59,7 @@ public class Phone extends Application
         }));
         confirmMenuHandle = GestureUI.registerGestureMenu(new GestureUI.GestureMenu("", new String[]{"Call", "Cancel"}, new GestureUI.GestureMenu.handler()
         {
+            @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void menuAction(String letter, String option)
             {
@@ -79,15 +89,24 @@ public class Phone extends Application
                     number += GestureUI.characterToNumber(String.valueOf(text.charAt(i)));
                 }
                 GestureUI.speakInterrupt(number);
+                currentPhoneNumber = number;
                 GestureUI.activateMenu(confirmMenuHandle);
             }
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public static void call(String number)
     {
+        TelephonyManager telephony = (TelephonyManager) GestureUI.appContext.getSystemService(Context.TELEPHONY_SERVICE);
+        String region = telephony.getNetworkCountryIso().toUpperCase(Locale.getDefault());
+        PhoneNumberUtil libphone = PhoneNumberUtil.getInstance();
+        int code = libphone.getCountryCodeForRegion(region);
+        String finalNum = "";
+        if(!number.startsWith("00") && !number.startsWith("+")) finalNum += "+" + String.valueOf(code);
+        finalNum += number;
         Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri.parse("tel:" + number));//change the number
+        callIntent.setData(Uri.parse("tel:" + finalNum));
         GestureUI.appContext.startActivity(callIntent);
     }
 

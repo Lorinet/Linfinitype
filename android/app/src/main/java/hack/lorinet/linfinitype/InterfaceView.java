@@ -119,8 +119,10 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
             @Override
             public void onClick(View v)
             {
-                GestureUI.input(((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString());
-                GestureUI.input(((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString());
+                String input = ((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString();
+                if(input.length() < 5) return;
+                GestureUI.input(input);
+                GestureUI.input(input);
                 GestureUI.input("11111");
                 ((TextInputEditText) findViewById(R.id.inputTextView)).setText("");
             }
