@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "Linfinitype/1.0.0": {
+        "runtime": {
+          "Linfinitype.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Linfinitype/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

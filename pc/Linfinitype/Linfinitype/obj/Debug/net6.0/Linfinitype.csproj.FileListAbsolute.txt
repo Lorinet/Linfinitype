@@ -1,0 +1,15 @@
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\bin\Debug\net6.0\Linfinitype.exe
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\bin\Debug\net6.0\Linfinitype.deps.json
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\bin\Debug\net6.0\Linfinitype.runtimeconfig.json
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\bin\Debug\net6.0\Linfinitype.dll
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\bin\Debug\net6.0\Linfinitype.pdb
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.csproj.AssemblyReference.cache
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.AssemblyInfoInputs.cache
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.AssemblyInfo.cs
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.csproj.CoreCompileInputs.cache
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.dll
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\refint\Linfinitype.dll
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.pdb
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\Linfinitype.genruntimeconfig.cache
+C:\Users\lorin\source\repos\Linfinitype\Linfinitype\obj\Debug\net6.0\ref\Linfinitype.dll
