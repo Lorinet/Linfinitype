@@ -47,14 +47,14 @@ if($contact[0] === '@') $isgrp = TRUE;
     <span id="username" style="display: none;"><?php echo $_SESSION["username"]; ?></span>
     <span id="isgroup" style="display: none;"><?php if($isgrp) echo "grp"; ?></span>
     <ul class="titleHeader center">
-        <li class="backItem"><a href="./chats.php" class="backButton"><span>Vissza</span></a></li>
+        <li class="backItem"><a href="./chats.php" class="backButton"><span>Back</span></a></li>
         <li class="userLabel"><?php echo $contact; ?></li>
     </ul>
     <div class="conversationContainer center" id="conversationContainer">
         <table id="messageTable" class="messageTable">
         </table>
         <ul class="replyArea">
-            <li class="replyBoxContainer"><input type="text" placeholder="Üzenet" class="replyBox" name="message" id="replyBox" autofocus autocomplete="off"></li>
+            <li class="replyBoxContainer"><input type="text" placeholder="Reply" class="replyBox" name="message" id="replyBox" autofocus autocomplete="off"></li>
             <li class="chatButton"><i class="fas fa-paper-plane" onclick="send();"></i></li>
         </ul>
     </div>

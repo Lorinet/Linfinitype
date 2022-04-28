@@ -6,7 +6,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 {
     if (empty(trim($_POST["username"])))
     {
-        $username_err = "Írj be egy felhasználónevet!";
+        $username_err = "Enter a username!";
     }
     else
     {
@@ -20,13 +20,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
                 mysqli_stmt_store_result($stmt);
                 if (mysqli_stmt_num_rows($stmt) == 1)
                 {
-                    $username_err = "Ez a felhasználónév már foglalt.";
+                    $username_err = "Username already in use.";
                 }
                 else
                 {
                     if(strpos($_POST["username"], '@') !== false || strpos($_POST["username"], '%') !== false || strpos($_POST["username"], '|') !== false || strpos($_POST["username"], '<') !== false || strpos($_POST["username"], '>') !== false || strpos($_POST["username"], '/') !== false || strpos($_POST["username"], '\\') !== false || strpos($_POST["username"], '#') !== false)
                     {
-                        $username_err = "A felhasználónevek nem tartalmazhatnak speciális karaktereket!";
+                        $username_err = "Username cannot contain special characters.";
                     }
                     else
                     {
@@ -36,14 +36,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             }
             else
             {
-                echo "Valami nem működött. Próbáld újra később.";
+                echo "Something went wrong. Please try again later!";
             }
             mysqli_stmt_close($stmt);
         }
     }
     if (empty(trim($_POST["email"])))
     {
-        $email_err = "Írj be egy e-mail címet.";
+        $email_err = "Enter e-mail address!";
     }
     else
     {
@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
                 mysqli_stmt_store_result($stmt);
                 if (mysqli_stmt_num_rows($stmt) == 1)
                 {
-                    $email_err = "Ez az e-mail cím már foglalt.";
+                    $email_err = "This e-mail address is already in use.";
                 }
                 else
                 {
@@ -66,18 +66,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             }
             else
             {
-                echo "Valami nem működött. Próbáld újra késóbb.";
+                echo "VSomething got fucked up. Try again later!";
             }
             mysqli_stmt_close($stmt);
         }
     }
     if (empty(trim($_POST["password"])))
     {
-        $password_err = "Írj be egy jelszót.";
+        $password_err = "Enter a password!";
     }
     elseif (strlen(trim($_POST["password"])) < 6)
     {
-        $password_err = "A jelszó legalább 6 karakter hosszú kell legyen.";
+        $password_err = "The password must be at least 6 characters long.";
     }
     else
     {
@@ -85,19 +85,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     }
     if (empty(trim($_POST["confirm_password"])))
     {
-        $confirm_password_err = "Írd be újra a jelszavadat.";
+        $confirm_password_err = "Confirm your password!";
     }
     else
     {
         $confirm_password = trim($_POST["confirm_password"]);
         if (empty($password_err) && ($password != $confirm_password))
         {
-            $confirm_password_err = "A két jelszó nem talál.";
+            $confirm_password_err = "The passwords do not match.";
         }
     }
     if(empty($_POST["fullname"]))
     {
-        $fullname_err = "Írd be a teljes nevedet.";
+        $fullname_err = "Enter your full name.";
     }
     else
     {
@@ -119,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
             }
             else
             {
-                echo "Valami nem működik. Próbáld újra később.";
+                echo "Something is not right. Try again later!";
             }
             mysqli_stmt_close($stmt);
         }
@@ -144,31 +144,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     <div class="spacer"></div>
     <div class="container">
         <div class="centered">
-            <div class="bigTitle" style="padding: 0px !important;">Fiók létrehozása</div>
+            <div class="bigTitle" style="padding: 0px !important;">Sign up</div>
             <br>
             <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                 <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
-                    <input type="text" name="username" class="lightTextBox" placeholder="Felhasználónév" value="<?php echo $username; ?>">
+                    <input type="text" name="username" class="lightTextBox" placeholder="Username" value="<?php echo $username; ?>">
                     <span class="help-block"><?php echo $username_err; ?></span>
                 </div>
                 <div class="form-group <?php echo (!empty($fullname_err)) ? 'has-error' : ''; ?>">
-                    <input type="text" name="fullname" class="lightTextBox" placeholder="Teljes név" value="<?php echo $fullname; ?>">
+                    <input type="text" name="fullname" class="lightTextBox" placeholder="Full name" value="<?php echo $fullname; ?>">
                     <span class="help-block"><?php echo $fullname_err; ?></span>
                 </div>
                 <div class="form-group <?php echo (!empty($email_err)) ? 'has-error' : ''; ?>">
-                    <input type="text" name="email" class="lightTextBox" placeholder="E-mail cím" value="<?php echo $email; ?>">
+                    <input type="text" name="email" class="lightTextBox" placeholder="E-mail address" value="<?php echo $email; ?>">
                     <span class="help-block"><?php echo $email_err; ?></span>
                 </div>
                 <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
-                    <input type="password" name="password" class="lightTextBox" placeholder="Jelszó" value="<?php echo $password; ?>">
+                    <input type="password" name="password" class="lightTextBox" placeholder="Password" value="<?php echo $password; ?>">
                     <span class="help-block"><?php echo $password_err; ?></span>
                 </div>
                 <div class="form-group <?php echo (!empty($confirm_password_err)) ? 'has-error' : ''; ?>">
-                    <input type="password" name="confirm_password" class="lightTextBox" placeholder="Jelszó megerősítése" value="<?php echo $confirm_password; ?>">
+                    <input type="password" name="confirm_password" class="lightTextBox" placeholder="Confirm password" value="<?php echo $confirm_password; ?>">
                     <span class="help-block"><?php echo $confirm_password_err; ?></span>
                 </div>
-                <input type="submit" class="niceWideButton affirmative" style="width: 100%; margin: 5px 0px 15px 0px;" value="Feliratkozás">
-                <p>Van már fiókod? <a href="login.php">Jelentkezz be</a>.</p>
+                <input type="submit" class="niceWideButton affirmative" style="width: 100%; margin: 5px 0px 15px 0px;" value="Register">
+                <p>Have you got an account? <a href="login.php">Log in here</a>.</p>
             </form>
         </div>
     </div>

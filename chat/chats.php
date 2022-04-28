@@ -23,30 +23,30 @@ $contacts = getActiveContacts($_SESSION["username"]);
 </head>
 <body>
     <div class="homeMenuButton" style="text-align: right;" onclick="document.getElementById('newChatDialog').style.display = 'block';"><i class="fas fa-plus"></i></div>
-    <div class="bigTitle" style="text-align: center;">Beszélgetések</div>
+    <div class="bigTitle" style="text-align: center;">Chats</div>
     <br>
     <div id="newChatDialog" style="display: none;">
         <div class="mask"></div>
         <div class="modal">
-            <p class="modalTitle">Új beszélgetés</p>
+            <p class="modalTitle">New chat</p>
             <div class="modalSpacer"></div>
-            <div class="modalButton" onclick="document.getElementById('messageDialog').style.display = 'block';document.getElementById('newChatDialog').style.display = 'none';">Felhasználó keresése</div>
+            <div class="modalButton" onclick="document.getElementById('messageDialog').style.display = 'block';document.getElementById('newChatDialog').style.display = 'none';">Find user</div>
             <div class="modalSpacer"></div>
-            <div class="modalButton" onclick="document.getElementById('newChatDialog').style.display = 'none';">Vissza</div>
+            <div class="modalButton" onclick="document.getElementById('newChatDialog').style.display = 'none';">Back</div>
         </div>
     </div>
     <div id="messageDialog" style="display: none;">
         <div class="mask"></div>
         <div class="modal">
-            <p class="modalTitle">Felhasználó keresése</p>
+            <p class="modalTitle">Find user</p>
             <form action="conversation.php" id="messageForm" method="get">
-                <input type="text" name="user" class="bigTextBox" placeholder="Felhasználónév">
+                <input type="text" name="user" class="bigTextBox" placeholder="Username">
             </form>
             <div class="modalSpacer"></div>
             <div class="modalSpacer"></div>
-            <div class="modalButton affirmative" onclick="document.getElementById('messageForm').submit();">Üzenetküldés</div>
+            <div class="modalButton affirmative" onclick="document.getElementById('messageForm').submit();">Send message</div>
             <div class="modalSpacer"></div>
-            <div class="modalButton" onclick="document.getElementById('messageDialog').style.display = 'none';">Vissza</div>
+            <div class="modalButton" onclick="document.getElementById('messageDialog').style.display = 'none';">Back</div>
         </div>
     </div>
     <div>

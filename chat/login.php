@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-    <script>var doNotAutologin = false;</script>
 <?php
 session_start();
 if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true)
@@ -11,12 +10,13 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true)
 require_once "config.php";
 $username = $password = "";
 $username_err = $password_err = "";
+$dnal = false;
 if ($_SERVER["REQUEST_METHOD"] == "POST")
 {
     if (empty(trim($_POST["username"])))
     {
-        $username_err = "Írd be a felhasználóneved!";
-        echo '<script>doNotAutologin = true;</script>';
+        $username_err = "Enter your username!";
+        $dnal = true;
     }
     else
     {
@@ -24,8 +24,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     }
     if (empty(trim($_POST["password"])))
     {
-        $password_err = "Írd be a jelszavad!";
-        echo '<script>doNotAutologin = true;</script>';
+        $password_err = "Enter your password!";
+        $dnal = true;
     }
     else
     {
@@ -57,21 +57,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
                         }
                         else
                         {
-                            $password_err = "A beírt jelszó nem helyes.";
-                            echo '<script>doNotAutologin = true;</script>';
+                            $password_err = "Your password is incorrect.";
+                            $dnal = true;
                         }
                     }
                 }
                 else
                 {
-                    $username_err = "Nem található ilyen nevű felhasználó.";
-                    echo '<script>doNotAutologin = true;</script>';
+                    $username_err = "Invalid username";
+                    $dnal = true;
                 }
             }
             else
             {
-                echo "Valami nem működött. Próbáld újra később!";
-                echo '<script>doNotAutologin = true;</script>';
+                echo "Something went wrong. Try again later.";
+                $dnal = true;
             }
             mysqli_stmt_close($stmt);
         }
@@ -94,23 +94,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     <div class="spacer"></div>
     <div class="container">
         <div class="centered">
-            <div class="bigTitle" style="padding: 0px !important;">Bejelentkezés</div>
+            <div class="bigTitle" style="padding: 0px !important;">Sign in</div>
             <br>
             <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post" id="loginForm">
                 <div class="form-group <?php echo (!empty($username_err)) ? 'has-error' : ''; ?>">
-                    <input type="text" name="username" id="usernameBox" class="lightTextBox" placeholder="Felhasználónév" value="<?php echo $username; ?>">
+                    <input type="text" name="username" id="usernameBox" class="lightTextBox" placeholder="Username" value="<?php echo $username; ?>">
                     <span class="help-block"><?php echo $username_err; ?></span>
                 </div>
                 <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
-                    <input type="password" name="password" id="passwordBox" class="lightTextBox" placeholder="Jelszó">
+                    <input type="password" name="password" id="passwordBox" class="lightTextBox" placeholder="Password">
                     <span class="help-block"><?php echo $password_err; ?></span>
                 </div>
-                <input type="submit" class="niceWideButton affirmative" style="width: 100%; margin: 5px 0px 15px 0px;" value="Bejelentkezés">
-                <p>Nincs még fiókod? <a href="register.php">Iratkozz fel!</a>.</p>
+                <input type="submit" class="niceWideButton affirmative" style="width: 100%; margin: 5px 0px 15px 0px;" value="Login">
+                <p>Don't have an account? <a href="register.php">Sign up now!</a>.</p>
             </form>
         </div>
     </div>
     <script>
+        var doNotAutologin = false;
+        <?php
+            if($dnal) echo 'doNotAutologin = true;';
+        ?>
         var uname = localStorage.getItem("username");
         var passwd = localStorage.getItem("password");
         if(uname !== null && passwd !== null && !doNotAutologin)
