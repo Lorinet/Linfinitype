@@ -3,6 +3,7 @@ package hack.lorinet.linfinitype;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
@@ -32,18 +33,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
         devicelist = findViewById(R.id.devicelist);
-        ((Button) findViewById(R.id.testConnectButton)).setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View view)
-            {
-                Intent i = new Intent(MainActivity.this, InterfaceView.class);
-                i.putExtra("testMode", "enabled");
-                startActivity(i);
-            }
-        });
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onStart()
     {
@@ -69,6 +61,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void pairedDevices()
     {
         bluetoothDevices = bluetoothAdap.getBondedDevices();

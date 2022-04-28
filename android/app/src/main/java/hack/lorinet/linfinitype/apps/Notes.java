@@ -29,7 +29,7 @@ public class Notes extends Application
             {
                 switch(letter)
                 {
-                    case "A":
+                    case "a":
                         GestureUI.speakInterrupt("Enter title");
                         GestureUI.activateTextInput(titleTextHandler);
                         break;
@@ -50,19 +50,29 @@ public class Notes extends Application
                 }
             }
         }));
-        actionMenuHandle = GestureUI.registerGestureMenu(new GestureUI.GestureMenu("Actions", new String[]{"Read", "Edit"}, new GestureUI.GestureMenu.handler()
+        actionMenuHandle = GestureUI.registerGestureMenu(new GestureUI.GestureMenu("Actions", new String[]{"Read", "Edit", "Delete"}, new GestureUI.GestureMenu.handler()
         {
             @Override
             public void menuAction(String letter, String option)
             {
                 switch(letter)
                 {
-                    case "A":
+                    case "a":
                         GestureUI.speakInterrupt(currentNoteContents);
                         break;
-                    case "B":
+                    case "b":
                         GestureUI.speakInterrupt("Enter contents");
                         GestureUI.activateTextInput(contentTextHandler);
+                        break;
+                    case "c":
+                        SharedPreferences spn = GestureUI.appContext.getSharedPreferences("notes", 0);
+                        SharedPreferences.Editor spedn = spn.edit();
+                        spedn.remove(currentNoteTitle);
+                        spedn.apply();
+                        currentNoteTitle = "";
+                        GestureUI.speakInterrupt("Note deleted");
+                        loadNotes();
+                        GestureUI.activateMenu(notesMenuHandle);
                         break;
                 }
             }

@@ -20,7 +20,7 @@ public class Chat extends Application
     private int conversationWebViewEventHandler = HANDLE_NULL;
     private int replyTextHandler = -1;
 
-    public static final String chatUrl = "http://ec2-3-132-15-124.us-east-2.compute.amazonaws.com:8081";
+    public static final String chatUrl = "http://nebulonia.ro:8088";
     public static String currentUser = "";
 
     public Chat()

@@ -5,6 +5,7 @@ import static androidx.core.content.ContextCompat.startActivity;
 import static hack.lorinet.linfinitype.GestureUI.HANDLE_NULL;
 
 import android.content.Intent;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ public class Launcher extends Application
             @Override
             public void menuAction(String letter, String option)
             {
+                Log.i("Launcher", option);
                 GestureUI.launchApplication(applicationHandles.get(option));
             }
         }));

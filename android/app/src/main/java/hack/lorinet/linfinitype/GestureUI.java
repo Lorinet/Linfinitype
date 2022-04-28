@@ -2,9 +2,12 @@ package hack.lorinet.linfinitype;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.webkit.WebView;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -15,6 +18,7 @@ import hack.lorinet.linfinitype.apps.Chat;
 import hack.lorinet.linfinitype.apps.Launcher;
 import hack.lorinet.linfinitype.apps.Notes;
 import hack.lorinet.linfinitype.apps.Phone;
+import hack.lorinet.linfinitype.apps.Trainer;
 
 public class GestureUI
 {
@@ -80,7 +84,7 @@ public class GestureUI
 
         public void speakMenu()
         {
-            speak(title);
+            speakInterrupt(title);
             for (int i = 0; i < options.length; i++)
             {
                 speak(numberToCharacter(i) + ", " + options[i]);
@@ -102,10 +106,10 @@ public class GestureUI
     public static final char GESTURE_EXIT = '^';
     public static final char GESTURE_DELETE = '-';
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public static void input(char gesture)
     {
-        Log.i("Gesture", Character.toString(gesture));
-        Log.i("CurrentMenu", String.valueOf(currentMenu));
+        TestSuite.testLog(Character.toString(gesture));
         if (gesture != doubleCheckGesture)
         {
             previousGesture = doubleCheckGesture;
@@ -123,51 +127,47 @@ public class GestureUI
             {
                 if (textInput)
                 {
-                    if (gesture == '?' || gesture == ' ' || gesture >= 0x41)
+                    switch (gesture)
                     {
-                        currentTextInput += gesture;
-                        speakInterrupt(Character.toString(gesture));
-                    }
-                    else
-                    {
-                        switch (gesture)
-                        {
-                            case GESTURE_EXIT:
-                                textInput = false;
-                                currentTextInput = "";
-                                showMenu();
-                                break;
-                            case GESTURE_DELETE:
+                        case GESTURE_EXIT:
+                            textInput = false;
+                            currentTextInput = "";
+                            showMenu();
+                            break;
+                        case GESTURE_DELETE:
+                            if (currentTextInput.length() > 0)
+                            {
                                 currentTextInput = currentTextInput.substring(0, currentTextInput.length() - 1);
                                 speakInterrupt(currentTextInput);
-                                break;
-                            case GESTURE_OK:
-                                inputHandlers.get(currentInputHandler).input(currentTextInput);
-                                currentTextInput = "";
-                                break;
-                        }
+                            }
+                            break;
+                        case GESTURE_OK:
+                            inputHandlers.get(currentInputHandler).input(currentTextInput);
+                            currentTextInput = "";
+                            break;
+                        default:
+                            currentTextInput += gesture;
+                            speakInterrupt(Character.toString(gesture));
+                            break;
                     }
                 }
                 else
                 {
-                    if (gesture >= 0x41)
+                    switch (gesture)
                     {
-                        selectMenuItem(Character.toString(gesture));
-                    }
-                    else
-                    {
-                        switch (gesture)
-                        {
-                            case GESTURE_START:
-                                activated = false;
-                                break;
-                            case GESTURE_EXIT:
-                                launchApplication(APP_LAUNCHER);
-                                break;
-                            case '?':
-                                showMenu();
-                                break;
-                        }
+                        case GESTURE_START:
+                            activated = false;
+                            speakInterrupt("Off");
+                            break;
+                        case GESTURE_EXIT:
+                            launchApplication(APP_LAUNCHER);
+                            break;
+                        case '?':
+                            showMenu();
+                            break;
+                        default:
+                            selectMenuItem(Character.toString(gesture));
+                            break;
                     }
                 }
             }
@@ -193,9 +193,9 @@ public class GestureUI
 
     public static <T> int register(ArrayList<T> list, T obj)
     {
-        for(int i = 0; i < list.size(); i++)
+        for (int i = 0; i < list.size(); i++)
         {
-            if(list.get(i) == null)
+            if (list.get(i) == null)
             {
                 list.set(i, obj);
                 return i;
@@ -207,7 +207,7 @@ public class GestureUI
 
     public static <T> int unregister(ArrayList<T> list, int handle)
     {
-        if(handle >= 0 && handle < list.size()) list.set(handle, null);
+        if (handle >= 0 && handle < list.size()) list.set(handle, null);
         return HANDLE_NULL;
     }
 
@@ -220,11 +220,12 @@ public class GestureUI
         registerApplication(new Assistant());
         registerApplication(new Notes());
         registerApplication(new Calculator());
+        registerApplication(new Trainer());
     }
 
     public static void unregisterApplications()
     {
-        for(int i =0; i < applications.size(); i++)
+        for (int i = 0; i < applications.size(); i++)
         {
             unregisterApplication(i);
         }
@@ -237,7 +238,14 @@ public class GestureUI
 
     public static int registerGestureMenu(GestureMenu gmenu)
     {
-       return register(menus, gmenu);
+        return register(menus, gmenu);
+    }
+
+    public static int registerActivateGestureMenu(GestureMenu gmenu)
+    {
+        int hmenu = registerGestureMenu(gmenu);
+        activateMenu(hmenu);
+        return hmenu;
     }
 
     public static int registerWebViewEventHandler(WebViewEventHandler wveh)
@@ -252,10 +260,16 @@ public class GestureUI
 
     public static int unregisterApplication(int handle)
     {
-        if(handle >= 0 && handle < applications.size())
+        if (handle >= 0 && handle < applications.size())
         {
-            if(applications.get(handle) != null) applications.get(handle).unregister();
-            else return HANDLE_NULL;
+            if (applications.get(handle) != null)
+            {
+                applications.get(handle).unregister();
+            }
+            else
+            {
+                return HANDLE_NULL;
+            }
         }
         return unregister(applications, handle);
     }
@@ -277,23 +291,23 @@ public class GestureUI
 
     public static GestureMenu getGestureMenu(int handle)
     {
-        if(handle < menus.size()) return menus.get(handle);
+        if (handle < menus.size()) return menus.get(handle);
         return null;
     }
 
     public static void setGestureMenu(int handle, GestureMenu gmenu)
     {
-        if(handle < menus.size())
+        if (handle < menus.size())
         {
-            if(menus.get(handle) != null) menus.set(handle, gmenu);
+            if (menus.get(handle) != null) menus.set(handle, gmenu);
         }
     }
 
     public static void launchApplication(int handle)
     {
-        if(handle >= 0 && handle < applications.size())
+        if (handle >= 0 && handle < applications.size())
         {
-            if(applications.get(handle) != null) applications.get(handle).start();
+            if (applications.get(handle) != null) applications.get(handle).start();
         }
     }
 
@@ -318,8 +332,13 @@ public class GestureUI
 
     public static int characterToNumber(String c)
     {
-        Log.i("CharToNum", String.valueOf((int) (c.charAt(0) - 65)));
-        return c.charAt(0) - 65;
+        Log.i("CharToNum", String.valueOf((int) (c.charAt(0) - 97)));
+        return c.charAt(0) - 97;
+    }
+
+    public static void spellOut(String text)
+    {
+        for(int i = 0; i < text.length(); i++) speak(String.valueOf(text.charAt(i)));
     }
 
     public static void speak(String text)

@@ -14,27 +14,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.textfield.TextInputLayout
+        <Button
+            android:id="@+id/testButton"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:text="Start/stop data collection" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/inputTextView"
-                android:layout_width="match_parent"
-                android:layout_height="74dp"
-                android:hint="00000" />
+        <WebView
+            android:id="@+id/appWebView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
-            <Button
-                android:id="@+id/testButton"
-                android:layout_width="123dp"
-                android:layout_height="65dp"
-                android:text="Input" />
-
-            <WebView
-                android:id="@+id/appWebView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

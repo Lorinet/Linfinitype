@@ -1,5 +1,6 @@
 package hack.lorinet.linfinitype;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
@@ -14,9 +15,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -48,6 +51,7 @@ import java.util.UUID;
 public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnInitListener
 {
     static final int REQUEST_CODE_CONTACTS_PERMISSION = 0;
+    static final int REQUEST_CODE_EXTERNAL_STORAGE_PERMISSION = 1;
 
     // UUID for HC-05 module
     static final UUID deviceUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -61,22 +65,21 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
 
     private final Handler handler = new Handler()
     {
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void handleMessage(Message msg)
         {
             switch (msg.what)
             {
                 case 0:
-                    byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
-                    //Toast.makeText(getApplicationContext(), readMessage, Toast.LENGTH_SHORT);
-                    GestureUI.input(readMessage);
+                    char inp = (char) ((byte[]) msg.obj)[0];
+                    GestureUI.input(inp);
                     break;
             }
         }
     };
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -88,43 +91,42 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
         GestureUI.appContext = this;
         GestureUI.webView = (WebView) findViewById(R.id.appWebView);
         Intent intent = getIntent();
-        if (intent.getStringExtra("testMode").equals("enabled"))
+        Log.i("Linfinitype", "Connecting to Linfinity device");
+        macAddress = intent.getStringExtra("address");
+        try
         {
-            Log.i("Linfinitype", "Input test mode");
+            if (bluetoothSocket == null || !connected)
+            {
+                bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
+                BluetoothDevice hc = bluetoothAdap.getRemoteDevice(macAddress);
+                bluetoothSocket = hc.createInsecureRfcommSocketToServiceRecord(deviceUUID);
+                bluetoothAdap.cancelDiscovery();
+                bluetoothSocket.connect();
+                connected = true;
+                connectedThread = new ConnectedThread(bluetoothSocket);
+                connectedThread.start();
+            }
         }
-        else
+        catch (IOException e)
         {
-            Log.i("Linfinitype", "Connecting to Linfinity device");
-            macAddress = intent.getStringExtra("address");
-            try
-            {
-                if (bluetoothSocket == null || !connected)
-                {
-                    bluetoothAdap = BluetoothAdapter.getDefaultAdapter();
-                    BluetoothDevice hc = bluetoothAdap.getRemoteDevice(macAddress);
-                    bluetoothSocket = hc.createInsecureRfcommSocketToServiceRecord(deviceUUID);
-                    bluetoothAdap.cancelDiscovery();
-                    bluetoothSocket.connect();
-                    connectedThread = new ConnectedThread(bluetoothSocket);
-                    connectedThread.start();
-                }
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
         ((Button) findViewById(R.id.testButton)).setOnClickListener(new View.OnClickListener()
         {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v)
             {
-                String input = ((TextInputEditText) findViewById(R.id.inputTextView)).getText().toString();
-                if(input.length() < 5) return;
-                GestureUI.input(input);
-                GestureUI.input(input);
-                GestureUI.input("11111");
-                ((TextInputEditText) findViewById(R.id.inputTextView)).setText("");
+                if(TestSuite.testing())
+                {
+                    TestSuite.stopTest();
+                    Toast.makeText(getApplicationContext(), "Stopped data recording", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    TestSuite.newTest();
+                    Toast.makeText(getApplicationContext(), "Recording new test", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -210,7 +212,15 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
             }
         });
         webview.loadUrl("about:blank");
-        requestContactPermission();
+        requestPermissions();
+        if (Build.VERSION.SDK_INT >= 30)
+        {
+            if (!Environment.isExternalStorageManager()){
+                Intent getpermission = new Intent();
+                getpermission.setAction(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivity(getpermission);
+            }
+        }
         GestureUI.start();
     }
 
@@ -233,6 +243,12 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
     }
 
     @Override
+    public void onBackPressed()
+    {
+        finish();
+    }
+
+    @Override
     public void onDestroy()
     {
         if (textToSpeech != null)
@@ -240,6 +256,7 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
             textToSpeech.stop();
             textToSpeech.shutdown();
         }
+        if(connected) connected = false;
         super.onDestroy();
     }
 
@@ -248,6 +265,7 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
         private final BluetoothSocket bluetoothSocket;
         private final InputStream inputStream;
         private byte[] inputBuffer;
+        private boolean stop = false;
 
         public ConnectedThread(BluetoothSocket socket)
         {
@@ -270,11 +288,22 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
         {
             inputBuffer = new byte[1024];
             int numBytes;
-
             while (true)
             {
                 try
                 {
+                    if(!connected)
+                    {
+                        try
+                        {
+                            bluetoothSocket.close();
+                            Log.i("LinfinitypeDevice", "Disconnected");
+                        }
+                        catch (IOException e)
+                        {
+                            Log.e("LinfinitypeDevice", "Could not close the connect socket", e);
+                        }
+                    }
                     if (inputStream.available() >= 1)
                     {
                         numBytes = inputStream.read(inputBuffer);
@@ -294,22 +323,15 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
 
         public void cancel()
         {
-            try
-            {
-                bluetoothSocket.close();
-            }
-            catch (IOException e)
-            {
-                Log.e("LinfinitypeDevice", "Could not close the connect socket", e);
-            }
+            stop = true;
         }
     }
 
-    private void requestContactPermission()
+    private void requestPermissions()
     {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
         {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED)
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.MANAGE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
             {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.READ_CONTACTS))
                 {
@@ -323,16 +345,14 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
                         @Override
                         public void onDismiss(DialogInterface dialog)
                         {
-                            requestPermissions(new String[]{android.Manifest.permission.READ_CONTACTS}, REQUEST_CODE_CONTACTS_PERMISSION);
+                            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MANAGE_EXTERNAL_STORAGE}, REQUEST_CODE_CONTACTS_PERMISSION);
                         }
                     });
                     builder.show();
                 }
                 else
                 {
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{android.Manifest.permission.READ_CONTACTS},
-                            REQUEST_CODE_CONTACTS_PERMISSION);
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CONTACTS, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.MANAGE_EXTERNAL_STORAGE}, REQUEST_CODE_CONTACTS_PERMISSION);
                 }
             }
             else
@@ -369,7 +389,7 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
     {
         HashMap<String, String> contactMap = new HashMap<>();
         ContentResolver cr = getContentResolver();
-        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,null, null, null, null);
+        Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
         if ((cur != null ? cur.getCount() : 0) > 0)
         {
             while (cur != null && cur.moveToNext())
@@ -377,7 +397,7 @@ public class InterfaceView extends AppCompatActivity implements TextToSpeech.OnI
                 @SuppressLint("Range") String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                 @SuppressLint("Range") String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 @SuppressLint("Range") String fav = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.STARRED));
-                if(fav.equals("1"))
+                if (fav.equals("1"))
                 {
                     if (cur.getInt(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0)
                     {

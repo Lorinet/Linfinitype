@@ -8,10 +8,10 @@
 #define PAD_THUMBINDEX 10
 #define PAD_INDEXMIDDLE 15
 
-#define THUMB_THRESHOLD1 1100
+#define THUMB_THRESHOLD1 500
 #define THUMB_THRESHOLD2 300
 
-#define INDEX_THRESHOLD1 700
+#define INDEX_THRESHOLD1 650
 #define INDEX_THRESHOLD2 250
 
 #define MIDDLE_THRESHOLD1 800
@@ -43,7 +43,7 @@ int measure(int pin) {
   return ((int)m - 520) * 4;
 }
 
-String decodeGesture()
+String decodeGestureASL()
 {
   int thumb = DETECT(THUMB);
   int index = DETECT(INDEX);
@@ -69,12 +69,54 @@ String decodeGesture()
   else if(WEAK_ANY(thumb) && !index && SOFT(middle) && HARD(ring) && HARD(little)) return "p";
   else if(WEAK_ANY(thumb) && SOFT(index) && HARD(middle) && HARD(ring) && HARD(little)) return "q";
   else if(HARD(thumb) && HARD(index) && HARD(middle) && HARD(ring) && HARD(little)) return "s";
+  else if(!thumb && !index && HARD(middle) && HARD(ring) && !little) return "t";
+  else if(HARD(thumb) && !index && HARD(middle) && HARD(ring) && !little) return "u";
+  else if(ANY(thumb) && HARD(index) && !middle && HARD(ring) && !little) return "v";
   else if(HARD(thumb) && !index && !middle && !ring && ANY(little)) return "w";
   else if(!thumb && HARD(index) && !middle && HARD(ring) && !little) return "x";
   else if(!thumb && HARD(index) && HARD(middle) && HARD(ring) && !little) return "y";
-  bt.print(String(thumb) + String(index) + String(middle) + String(ring) + String(little) + "\n");
+  else if(!thumb && !index && !middle && HARD(ring) && !little && TOUCHING(THUMB, INDEX)) return "z";
+  else if(!thumb && !index && !middle && HARD(ring) && !little) return "^";
+  else if(!thumb && !index && HARD(middle) && !ring && !little) return "-";
+  else if(!thumb && HARD(index) && HARD(middle) && HARD(ring) && HARD(little)) return "!";
+  //bt.print(String(thumb) + String(index) + String(middle) + String(ring) + String(little) + "\n");
   return "";
-  
+}
+
+bool prevIdle = false;
+
+String decodeGestureBinary()
+{
+  int thumb = DETECT(THUMB) > 0;
+  int index = DETECT(INDEX) > 0;
+  int middle = DETECT(MIDDLE) > 0;
+  int ring = DETECT(RING) > 0;
+  int little = DETECT(LITTLE) > 0;
+  char dec = 0b01100000 | thumb << 0 | index << 1 | middle << 2 | ring << 3 | little << 4;
+  if(dec == 0b01100000 && !TOUCHING(INDEX, MIDDLE))
+  {
+    if(!prevIdle) 
+    {
+      prevIdle = true;
+      return ".";
+    }
+    else return "";
+  }
+  else
+  {
+    prevIdle = false;
+    if(TOUCHING(INDEX, MIDDLE) && !TOUCHING(THUMB, INDEX)) return "^";
+    else if(TOUCHING(INDEX, MIDDLE) && TOUCHING(THUMB, INDEX)) return "!";
+    if(dec == 0b01111011) return "?";
+    else if(dec == 0b01111101) return "t";
+    else if(dec == 0b01111100) return "-";
+    else if(dec == 0b01111110) return "$";
+    else if(dec == 0b01111111) return " ";
+    else if(dec == 'q') return "u";
+    else if(dec == 't') return "q";
+    else return String(dec);
+  }
+  //bt.print(String(thumb) + String(index) + String(middle) + String(ring) + String(little) + "\n");
 }
 
 void setup()
@@ -95,6 +137,6 @@ void setup()
 
 void loop()
 {
-  bt.print(decodeGesture());
-  delay(100);
+  bt.print(decodeGestureBinary());
+  delay(300);
 }
