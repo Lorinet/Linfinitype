@@ -1,6 +1,7 @@
 package hack.lorinet.linfinitype.apps;
 
 import static hack.lorinet.linfinitype.GestureUI.HANDLE_NULL;
+import static hack.lorinet.linfinitype.GestureUI.activateMenu;
 
 import android.content.SharedPreferences;
 
@@ -50,7 +51,7 @@ public class Notes extends Application
                 }
             }
         }));
-        actionMenuHandle = GestureUI.registerGestureMenu(new GestureUI.GestureMenu("Actions", new String[]{"Read", "Edit", "Delete"}, new GestureUI.GestureMenu.handler()
+        actionMenuHandle = GestureUI.registerGestureMenu(new GestureUI.GestureMenu("Actions", new String[]{"Read", "Edit", "Delete", "Back"}, new GestureUI.GestureMenu.handler()
         {
             @Override
             public void menuAction(String letter, String option)
@@ -71,6 +72,11 @@ public class Notes extends Application
                         spedn.apply();
                         currentNoteTitle = "";
                         GestureUI.speakInterrupt("Note deleted");
+                        loadNotes();
+                        GestureUI.activateMenu(notesMenuHandle);
+                        break;
+                    case "d":
+                        currentNoteTitle = "";
                         loadNotes();
                         GestureUI.activateMenu(notesMenuHandle);
                         break;

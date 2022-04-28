@@ -18,7 +18,13 @@ public class Chat extends Application
     private int menuHandle = HANDLE_NULL;
     private int chatsWebViewEventHandler = HANDLE_NULL;
     private int conversationWebViewEventHandler = HANDLE_NULL;
-    private int replyTextHandler = -1;
+    private int loginWebViewEventHandler = HANDLE_NULL;
+    private int replyTextHandler = HANDLE_NULL;
+    private int usernameTextHandler = HANDLE_NULL;
+    private int passwordTextHandler = HANDLE_NULL;
+
+    private String loginUsername = "";
+    private String loginPassword = "";
 
     public static final String chatUrl = "http://nebulonia.ro:8088";
     public static String currentUser = "";
@@ -42,6 +48,41 @@ public class Chat extends Application
                 });
             }
         });
+        usernameTextHandler = GestureUI.registerTextInputHandler(new GestureUI.TextInputHandler()
+        {
+            @Override
+            public void input(String text)
+            {
+                loginUsername = text;
+                GestureUI.speak("Enter password");
+                GestureUI.activateTextInput(passwordTextHandler);
+            }
+        });
+        passwordTextHandler = GestureUI.registerTextInputHandler(new GestureUI.TextInputHandler()
+        {
+            @Override
+            public void input(String text)
+            {
+                loginPassword = text;
+                GestureUI.webView.evaluateJavascript("document.getElementById('usernameBox').value = '" + loginUsername + "'; document.getElementById('passwordBox').value = '" + loginPassword + "'; document.getElementById('loginForm').submit();", new ValueCallback<String>()
+                {
+                    @Override
+                    public void onReceiveValue(String value)
+                    {
+
+                    }
+                });
+            }
+        });
+        loginWebViewEventHandler = GestureUI.registerWebViewEventHandler(new GestureUI.WebViewEventHandler("login.php", new GestureUI.WebViewEventHandler.handler()
+        {
+            @Override
+            public void onPageFinished(WebView view)
+            {
+                GestureUI.speak("Enter username");
+                GestureUI.activateTextInput(usernameTextHandler);
+            }
+        }));
         chatsWebViewEventHandler = GestureUI.registerWebViewEventHandler(new GestureUI.WebViewEventHandler("chats.php", new GestureUI.WebViewEventHandler.handler()
         {
             @Override
@@ -97,6 +138,14 @@ public class Chat extends Application
             @Override
             public void onPageFinished(WebView view)
             {
+                view.evaluateJavascript("alertNewMessages = true;", new ValueCallback<String>()
+                {
+                    @Override
+                    public void onReceiveValue(String value)
+                    {
+
+                    }
+                });
                 GestureUI.activateTextInput(replyTextHandler);
             }
         }));

@@ -29,12 +29,6 @@ public class Trainer extends Application
     public Trainer()
     {
         name = "Trainer";
-    }
-
-    @Override
-    public void start()
-    {
-        if(inputHandle != HANDLE_NULL) inputHandle = GestureUI.unregisterTextInputHandler(inputHandle);
         inputHandle = GestureUI.registerTextInputHandler(new GestureUI.TextInputHandler()
         {
             @Override
@@ -60,7 +54,6 @@ public class Trainer extends Application
                 GestureUI.activateTextInput(inputHandle);
             }
         });
-        if(mainMenuHandle != HANDLE_NULL) mainMenuHandle = GestureUI.unregisterGestureMenu(mainMenuHandle);
         mainMenuHandle = GestureUI.registerActivateGestureMenu(new GestureUI.GestureMenu("Learn how to use your Linfinitype!", new String[]{"Instruction guide", "Easy", "Medium", "Hard"}, new GestureUI.GestureMenu.handler()
         {
             @Override
@@ -194,6 +187,12 @@ public class Trainer extends Application
                 GestureUI.activateTextInput(inputHandle);
             }
         }));
+    }
+
+    @Override
+    public void start()
+    {
+        GestureUI.activateMenu(mainMenuHandle);
     }
 
     @Override

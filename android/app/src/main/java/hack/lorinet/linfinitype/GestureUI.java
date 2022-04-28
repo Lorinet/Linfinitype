@@ -91,6 +91,15 @@ public class GestureUI
             }
         }
 
+        public void speakMenuNoInterrupt()
+        {
+            speak(title);
+            for (int i = 0; i < options.length; i++)
+            {
+                speak(numberToCharacter(i) + ", " + options[i]);
+            }
+        }
+
         public void activateOption(String opt)
         {
             int index = characterToNumber(opt);
@@ -160,6 +169,7 @@ public class GestureUI
                             speakInterrupt("Off");
                             break;
                         case GESTURE_EXIT:
+                            webView.loadUrl("about:blank");
                             launchApplication(APP_LAUNCHER);
                             break;
                         case '?':
@@ -311,11 +321,16 @@ public class GestureUI
         }
     }
 
-    public static void activateMenu(int handle)
+    public static void activateMenuSilent(int handle)
     {
         textInput = false;
         currentTextInput = "";
         currentMenu = handle;
+    }
+
+    public static void activateMenu(int handle)
+    {
+        activateMenuSilent(handle);
         showMenu();
     }
 
@@ -360,6 +375,11 @@ public class GestureUI
     public static void showMenu()
     {
         menus.get(currentMenu).speakMenu();
+    }
+
+    public static void showMenuNoInterrupt()
+    {
+        menus.get(currentMenu).speakMenuNoInterrupt();
     }
 
     public static void selectMenuItem(String letter)
