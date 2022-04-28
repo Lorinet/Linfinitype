@@ -31,6 +31,7 @@ if($contact[0] === '@') $isgrp = TRUE;
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css">
     <script>
+        var alertNewMessages = false;
         function escapeHtml(text) 
         {
         return encodeURIComponent(text
@@ -128,7 +129,7 @@ if($contact[0] === '@') $isgrp = TRUE;
                     messageIndex = mesg.length;
                     for(var i = 0; i < mesg.length; i++)
                     {
-                        if(mesg[i].seen == false && mesg[i].sender != username) alert(mesg[i].message);
+                        if(mesg[i].seen == false && mesg[i].sender != username && alertNewMessages) alert(mesg[i].message);
                     }
                 }
             }
