@@ -1,3 +1,21 @@
+/*
+ * Linfinitype Arduino Firmware
+ * Copyright (C) 2022 Kovacs Lorand; Linfinity Technologies
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Lesser Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <SoftwareSerial.h>
 
 #define THUMB A0
@@ -119,9 +137,15 @@ String decodeGestureBinary()
   //bt.print(String(thumb) + String(index) + String(middle) + String(ring) + String(little) + "\n");
 }
 
+String getRawSensorData()
+{
+  return String(measure(THUMB)) + " " + String(measure(INDEX)) + " " + String(measure(MIDDLE)) + " " + String(measure(RING)) + " " + String(measure(LITTLE)); 
+}
+
 void setup()
 {
   delay(3000);
+  Serial.begin(9600);
   bt.begin(9600);
   bt.println("Linfinitype 0.2");
   pinMode(THUMB, INPUT);
